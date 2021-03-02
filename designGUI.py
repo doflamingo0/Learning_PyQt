@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtCore import QRect
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QDesktopWidget
 from PyQt5.QtGui import QTextFrame
 
 class UI(QWidget):
@@ -34,9 +34,19 @@ class UI(QWidget):
         graButton.move(40, 600)
         undoButton.move(240, 600)
 
-        self.setGeometry(740, 200, 440, 680)
-        self.setWindowTitle('ATV')
+        self.resize(440, 680)
+        self.center()
+        self.setWindowTitle('GUI')
         self.show()
+
+    
+    def center(self):
+
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
 
 
 def main():
