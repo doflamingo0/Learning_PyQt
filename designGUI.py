@@ -27,6 +27,7 @@ class MyWindow(QWidget):
         self.expButton = QPushButton('Export', self)
         self.expButton.resize(160, 40)
         self.expButton.move(240, 440)
+        self.expButton.clicked.connect(self.clickExp)
 
         self.rlButton = QPushButton('Rotate Left', self)
         self.rlButton.resize(160, 40)
@@ -55,18 +56,23 @@ class MyWindow(QWidget):
         self.move(qr.topLeft())
 
     def setLabel(self, imgPath):
-        pm = QPixmap(imgPath)
-        self.label.setPixmap(pm.scaled(360, 360, QtCore.Qt.KeepAspectRatio))
+        self.pm = QPixmap(imgPath)
+        self.label.setPixmap(self.pm.scaled(360, 360, QtCore.Qt.KeepAspectRatio))
         self.label.move(40, 40)
 
     def clickImp(self):
         options = QFileDialog.Options()
-        # options |= QFileDialog.DontUseNativeDialog
-        fName = QFileDialog.getOpenFileName(self, "Open a image","", "All File(*);;Image files (*.jpg *.png)", options=options)
+        fName = QFileDialog.getOpenFileName(self, "Open a image","", "Image files (*.jpg *.png);;All File(*)", options=options)
         imgPath = fName[0]
         if imgPath:
             self.setLabel(imgPath)
 
+    def clickExp(self):
+        options = QFileDialog.Options()
+        fName = QFileDialog.getSaveFileName(self, "Open a image","", "Image files (*.jpg)", options=options)
+        imgPath = fName[0]
+        if imgPath:
+            self.pm.save(imgPath)
 
 def main():
     app = QApplication(sys.argv)
