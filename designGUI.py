@@ -2,7 +2,7 @@ import sys
 
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QTransform
 from PyQt5.QtWidgets import QApplication, QFileDialog, QLabel, QWidget, QPushButton, QDesktopWidget
 
 class MyWindow(QWidget):
@@ -32,10 +32,12 @@ class MyWindow(QWidget):
         self.rlButton = QPushButton('Rotate Left', self)
         self.rlButton.resize(160, 40)
         self.rlButton.move(40, 520)
+        self.rlButton.clicked.connect(self.clickRL)
 
         self.rrButton = QPushButton('Rotate Right', self)
         self.rrButton.resize(160, 40)
         self.rrButton.move(240, 520)
+        self.rrButton.clicked.connect(self.clickRR)
 
         self.graButton = QPushButton('Grayscale', self)
         self.graButton.resize(160, 40)
@@ -56,8 +58,8 @@ class MyWindow(QWidget):
         self.move(qr.topLeft())
 
     def setLabel(self, imgPath):
-        self.pm = QPixmap(imgPath)
-        self.label.setPixmap(self.pm.scaled(360, 360, QtCore.Qt.KeepAspectRatio))
+        self.pm = QPixmap(imgPath).scaled(360, 360, QtCore.Qt.KeepAspectRatio)
+        self.label.setPixmap(self.pm)
         self.label.move(40, 40)
 
     def clickImp(self):
@@ -73,6 +75,17 @@ class MyWindow(QWidget):
         imgPath = fName[0]
         if imgPath:
             self.pm.save(imgPath)
+
+    def clickRL(self):
+        tf = QTransform().rotate(-90)
+        self.pm = self.pm.transformed(tf, QtCore.Qt.SmoothTransformation)
+        self.label.setPixmap(self.pm)
+
+    def clickRR(self):
+        tf = QTransform().rotate(90)
+        self.pm = self.pm.transformed(tf, QtCore.Qt.SmoothTransformation)
+        self.label.setPixmap(self.pm)
+
 
 def main():
     app = QApplication(sys.argv)
