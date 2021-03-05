@@ -2,7 +2,7 @@ import sys
 
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
-from PyQt5.QtGui import QPixmap, QTransform
+from PyQt5.QtGui import QImage, QPixmap, QTransform
 from PyQt5.QtWidgets import QApplication, QFileDialog, QLabel, QWidget, QPushButton, QDesktopWidget
 
 class MyWindow(QWidget):
@@ -42,6 +42,7 @@ class MyWindow(QWidget):
         self.graButton = QPushButton('Grayscale', self)
         self.graButton.resize(160, 40)
         self.graButton.move(40, 600)
+        self.graButton.clicked.connect(self.clickGrayscale)
 
         self.undoButton = QPushButton('Undo', self)
         self.undoButton.resize(160, 40)
@@ -86,6 +87,11 @@ class MyWindow(QWidget):
         self.pm = self.pm.transformed(tf, QtCore.Qt.SmoothTransformation)
         self.label.setPixmap(self.pm)
 
+    def clickGrayscale(self):
+        img = QPixmap.toImage(self.pm)
+        grayscale = img.convertToFormat(QImage.Format_Grayscale8)
+        self.pm = QPixmap.fromImage(grayscale)
+        self.label.setPixmap(self.pm)
 
 def main():
     app = QApplication(sys.argv)
