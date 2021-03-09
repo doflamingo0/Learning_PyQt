@@ -1,8 +1,7 @@
 import sys
-
+import cv2 as cv
 from PyQt5 import QtCore
-from PyQt5 import QtWidgets
-from PyQt5.QtGui import QImage, QPixmap, QTransform
+from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QApplication, QFileDialog, QLabel, QWidget, QPushButton, QDesktopWidget
 
 class MyWindow(QWidget):
@@ -12,6 +11,7 @@ class MyWindow(QWidget):
         self.setWindowTitle('GUI')
         self.resize(440, 680)
         self.listStatus = []
+        self.mark = 0   # = 1 if gray image, = 0 if not gray image
         self.x = 0
         self.y = 0
         self.initUI()
@@ -59,10 +59,25 @@ class MyWindow(QWidget):
         self.center()
         
 
-    # update position
-    def update(self):
-        self.x = int((440 - self.image.width())/2)
-        self.y = int((440 - self.image.height())/2)
+    # update position and label of rgb image
+    def updateRGB(self):
+        temp = QImage(self.image.data, self.image.shape[1], self.image.shape[0], 3*self.image.shape[1], QImage.Format_RGB888).rgbSwapped()
+        temp = QPixmap.fromImage(temp).scaled(360, 360, QtCore.Qt.KeepAspectRatio)
+        self.label.setPixmap(temp)
+
+        self.x = int((440 - temp.width())/2)
+        self.y = int((440 - temp.height())/2)
+        self.label.move(self.x, self.y)
+
+
+    # update position and label of gray image
+    def updateGray(self):
+        temp = QImage(self.image.data, self.image.shape[1], self.image.shape[0], self.image.shape[1], QImage.Format_Indexed8)
+        temp = QPixmap.fromImage(temp).scaled(360, 360, QtCore.Qt.KeepAspectRatio)
+        self.label.setPixmap(temp)
+
+        self.x = int((440 - temp.width())/2)
+        self.y = int((440 - temp.height())/2)
         self.label.move(self.x, self.y)
 
 
@@ -76,11 +91,11 @@ class MyWindow(QWidget):
 
     # set image of label
     def setLabel(self, imgPath):
+        self.image = cv.imread(imgPath)
+        self.mark = 0
         self.listStatus.clear()
-        self.image = QPixmap(imgPath).scaled(360, 360, QtCore.Qt.KeepAspectRatio)
-        self.listStatus.append(self.image)
-        self.label.setPixmap(self.image)
-        self.update()
+        self.listStatus.append([self.image, self.mark])
+        self.updateRGB()
 
 
     # click import button
@@ -98,34 +113,36 @@ class MyWindow(QWidget):
         fName = QFileDialog.getSaveFileName(self, "Open a image","", "Image files (*.jpg)", options=options)
         imgPath = fName[0]
         if imgPath:
-            self.image.save(imgPath)
+            cv.imwrite(imgPath, self.image)
 
 
     # click rotate left button
     def clickRL(self):
-        tf = QTransform().rotate(-90)
-        self.image = self.image.transformed(tf, QtCore.Qt.SmoothTransformation)
-        self.listStatus.append(self.image)
-        self.label.setPixmap(self.image)
-        self.update()
+        self.image = cv.rotate(self.image, cv.ROTATE_90_COUNTERCLOCKWISE)
+        self.listStatus.append([self.image, self.mark])
+        if self.mark == 0:
+            self.updateRGB()
+        else:
+            self.updateGray()
 
 
     # click rotate right button
     def clickRR(self):
-        tf = QTransform().rotate(90)
-        self.image = self.image.transformed(tf, QtCore.Qt.SmoothTransformation)
-        self.listStatus.append(self.image)
-        self.label.setPixmap(self.image)
-        self.update()
+        self.image = cv.rotate(self.image, cv.ROTATE_90_CLOCKWISE)
+        self.listStatus.append([self.image, self.mark])
+        if self.mark == 0:
+            self.updateRGB()
+        else:
+            self.updateGray()
 
 
     # click grayscale button
     def clickGrayscale(self):
-        img = QPixmap.toImage(self.image)
-        grayscale = img.convertToFormat(QImage.Format_Grayscale8)
-        self.image = QPixmap.fromImage(grayscale)
-        self.listStatus.append(self.image)
-        self.label.setPixmap(self.image)
+        if self.mark == 0:
+            self.mark = 1
+            self.image = cv.cvtColor(self.image, cv.COLOR_BGR2GRAY)
+            self.listStatus.append([self.image, self.mark])
+            self.updateGray()
 
 
     # click undo button
@@ -133,9 +150,11 @@ class MyWindow(QWidget):
         length = len(self.listStatus)
         if length > 1:
             self.listStatus.pop()
-            self.image = self.listStatus[length-2]
-            self.label.setPixmap(self.image)
-            self.update()
+            self.image, self.mark = self.listStatus[length-2]
+            if self.mark == 1:
+                self.updateGray()
+            else:
+                self.updateRGB()
 
 
 def main():
